@@ -50,3 +50,24 @@ jobs:
             Workflow regenerated the lockfile and committed it to the branch.
           base: main
           branch: update-pnpm-lockfile
+
+      - name: Auto-merge pull request
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const branch = 'update-pnpm-lockfile';
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            // find existing open PR for the branch
+            const { data: prs } = await github.rest.pulls.list({ owner, repo, head: `${owner}:${branch}`, state: 'open' });
+            let pr = prs && prs[0];
+            if (!pr) {
+              const { data } = await github.rest.pulls.create({ owner, repo, title: 'chore: update pnpm-lock.yaml', head: branch, base: 'main', body: 'Automated lockfile update (CI)' });
+              pr = data;
+            }
+            try {
+              await github.rest.pulls.merge({ owner, repo, pull_number: pr.number, commit_title: 'chore: update pnpm-lock.yaml', merge_method: 'merge' });
+              core.info(`Merged PR #${pr.number}`);
+            } catch (err) {
+              core.info(`Could not merge PR #${pr.number}: ${err.message}`);
+            }
