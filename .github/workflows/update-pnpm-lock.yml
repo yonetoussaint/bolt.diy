@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - update-pnpm-lockfile
+      - update-pnpm-lockfile-clean
 
 jobs:
   update-lock:
