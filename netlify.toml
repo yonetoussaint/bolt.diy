@@ -3,6 +3,9 @@
   publish = "public"
   functions = "netlify/functions"
 
+[build.environment]
+  PNPM_FLAGS = "--no-frozen-lockfile"
+
 [dev]
   command = "npm run netlify:dev"
   port = 8787
