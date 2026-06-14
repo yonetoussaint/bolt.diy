@@ -38,3 +38,15 @@ jobs:
           git add pnpm-lock.yaml
           git commit -m "chore: update pnpm-lock.yaml [ci skip]" || echo "No changes to commit"
           git push origin HEAD:update-pnpm-lockfile
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: update pnpm-lock.yaml [ci skip]"
+          title: "chore: update pnpm-lock.yaml"
+          body: |
+            This PR updates `pnpm-lock.yaml` to match `package.json`.
+            Workflow regenerated the lockfile and committed it to the branch.
+          base: main
+          branch: update-pnpm-lockfile
