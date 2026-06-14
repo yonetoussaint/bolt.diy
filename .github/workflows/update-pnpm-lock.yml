@@ -1,0 +1,38 @@
+name: Update pnpm-lock.yaml
+
+on:
+  push:
+    branches:
+      - update-pnpm-lockfile
+
+jobs:
+  update-lock:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Prepare pnpm
+        run: corepack prepare pnpm@9.14.4 --activate
+
+      - name: Install dependencies and regenerate lockfile
+        run: pnpm install --prefer-frozen-lockfile=false
+
+      - name: Commit updated lockfile
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add pnpm-lock.yaml
+          git commit -m "chore: update pnpm-lock.yaml [ci skip]" || echo "No changes to commit"
+          git push origin HEAD:update-pnpm-lockfile
