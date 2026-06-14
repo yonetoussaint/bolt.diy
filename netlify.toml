@@ -1,0 +1,14 @@
+[build]
+  command = "npm run netlify:build"
+  publish = "public"
+  functions = "netlify/functions"
+
+[dev]
+  command = "npm run netlify:dev"
+  port = 8787
+  framework = "remix"
+
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/render"
+  status = 200
