@@ -1,17 +1,41 @@
+# Netlify deployment configuration for bolt.diy
+#
+# The app is a Remix (Vite) SPA + SSR hybrid that was originally written for
+# Cloudflare Pages. For Netlify we build with REMIX_SERVER_BUILD_TARGET=netlify
+# (see the `netlify:build` script in package.json), which aliases the
+# Cloudflare Remix runtime to the Node runtime, and serve everything through
+# the single SSR Netlify Function in netlify/functions/ssr.mjs.
+#
+# Build outputs:
+#   - build/client : static assets, published to Netlify's CDN
+#   - build/server : Remix SSR bundle, imported by the SSR function
+
 [build]
   command = "npm run netlify:build"
-  publish = "public"
+  publish = "build/client"
   functions = "netlify/functions"
 
 [build.environment]
-  PNPM_FLAGS = "--no-frozen-lockfile"
+  NODE_VERSION = "22"
+
+# Ship the freshly generated SSR bundle inside the function package so the
+# dynamic import in netlify/functions/ssr.mjs always resolves at runtime,
+# independent of how the function bundler traces dependencies.
+[functions]
+  included_files = ["build/server/**"]
+
+# Route every request through the Remix SSR function. With `force = false`,
+# requests matching files that really exist in build/client (hashed assets,
+# favicon.ico, manifest.webmanifest, ...) are still served directly from the
+# CDN without invoking the function.
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/ssr"
+  status = 200
+  force = false
 
 [dev]
   command = "npm run netlify:dev"
   port = 8787
-  framework = "remix"
-
-[[redirects]]
-  from = "/*"
-  to = "/.netlify/functions/render"
-  status = 200
+  framework = "manual"
+  targetPort = 5173

@@ -12,6 +12,14 @@ dotenv.config({ path: '.env' });
 dotenv.config();
 
 export default defineConfig((config) => {
+  // When building/dev-ing for Netlify (see `netlify:build` script), we skip
+  // the Cloudflare dev proxy. The compiled app source keeps importing
+  // `@remix-run/cloudflare`, whose portable helpers (`json`, request/response
+  // types, ...) behave identically on the Node runtime used by Netlify
+  // Functions -- the exact same way electron/main/index.ts serves this server
+  // build from Node today.
+  const isNetlifyTarget = process.env.REMIX_SERVER_BUILD_TARGET === 'netlify';
+
   return {
     define: {
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
@@ -43,7 +51,9 @@ export default defineConfig((config) => {
           return null;
         },
       },
-      config.mode !== 'test' && remixCloudflareDevProxy(),
+      // The Cloudflare dev proxy only makes sense when targeting Cloudflare;
+      // in Netlify mode the Node runtime resolves `process.env` directly.
+      config.mode !== 'test' && !isNetlifyTarget && remixCloudflareDevProxy(),
       remixVitePlugin({
         future: {
           v3_fetcherPersist: true,

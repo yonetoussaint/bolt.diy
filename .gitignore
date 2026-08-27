@@ -25,7 +25,8 @@ dist-ssr
 /.history
 /.cache
 /build
-netlify
+# Local Netlify CLI state (deploy metadata, live config cache)
+.netlify
 functions/build/
 .env.local
 .env
@@ -46,4 +47,5 @@ changelogUI.md
 docs/instructions/Roadmap.md
 .cursorrules
 *.md
+!NETLIFY_DEPLOY.md
 .qodo
