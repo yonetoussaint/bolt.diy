@@ -140,3 +140,4 @@ kill %1
 | HTML loads but hashed assets 404 | Don't set `force = true` on the catch-all redirect. |
 | Provider keys ignored although set | Keys feed the **runtime** env of functions; redeploy after adding them so a fresh function picks them up. |
 | Long answers truncate | Sync function time limit reached (see §5). |
+| `FATAL ERROR: ... JavaScript heap out of memory` during `rendering chunks...` | Vite needs more than Node's default heap (~2 GB). Fixed in-repo via `NODE_OPTIONS = "--max-old-space-size=4096"` in `netlify.toml [build.environment]`; raise it further if you add code. |

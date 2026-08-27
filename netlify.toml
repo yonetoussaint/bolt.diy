@@ -1,10 +1,7 @@
 # Netlify deployment configuration for bolt.diy
 #
-# The app is a Remix (Vite) SPA + SSR hybrid that was originally written for
-# Cloudflare Pages. For Netlify we build with REMIX_SERVER_BUILD_TARGET=netlify
-# (see the `netlify:build` script in package.json), which aliases the
-# Cloudflare Remix runtime to the Node runtime, and serve everything through
-# the single SSR Netlify Function in netlify/functions/ssr.mjs.
+# Route every request through the Remix SSR function on the Node runtime
+# (see netlify/functions/ssr.mjs). Cloudflare/Docker targets stay unchanged.
 #
 # Build outputs:
 #   - build/client : static assets, published to Netlify's CDN
@@ -17,6 +14,11 @@
 
 [build.environment]
   NODE_VERSION = "22"
+  # Vite/Rollup peaks well above Node's default heap (~25% of RAM, ~2 GB on
+  # 8 GB runners) while rendering chunks of this large client bundle.
+  # Without this override the build dies with:
+  #   FATAL ERROR: ... JavaScript heap out of memory
+  NODE_OPTIONS = "--max-old-space-size=4096"
 
 # Ship the freshly generated SSR bundle inside the function package so the
 # dynamic import in netlify/functions/ssr.mjs always resolves at runtime,
