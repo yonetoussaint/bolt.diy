@@ -1,10 +1,43 @@
 import type { AppLoadContext } from '@remix-run/node';
 import { RemixServer } from '@remix-run/react';
 import { isbot } from 'isbot';
-import { renderToReadableStream } from 'react-dom/server';
 import { renderHeadToString } from 'remix-island';
 import { Head } from './root';
 import { themeStore } from '~/lib/stores/theme';
+
+/*
+ * Use a lazy dynamic import for ``react-dom/server`` so that the ESM → CJS
+ * interop does not blow up on the Netlify Node runtime.  ``react-dom/server``
+ * ships a CommonJS build that does not expose named ES exports, but a dynamic
+ * ``import()`` always goes through CJS-module-wrapper which normalises
+ * ``module.exports`` into a namespace object.
+ *
+ * Reference: https://nodejs.org/api/packages.html#named-exports
+ */
+type RenderToReadableStream = (
+  reactElement: React.ReactElement,
+  options: {
+    signal: AbortSignal;
+    onError: (error: unknown) => void;
+  },
+) => Promise<ReadableStream<Uint8Array> & { allReady: Promise<void> }>;
+
+let _renderToReadableStream: RenderToReadableStream | null = null;
+
+async function getRenderToReadableStream(): Promise<RenderToReadableStream> {
+  if (_renderToReadableStream === null) {
+    const mod = await import('react-dom/server');
+
+    /*
+     * ``import()`` on a CJS module returns a namespace where the whole
+     * ``module.exports`` is placed under ``.default``.
+     */
+
+    _renderToReadableStream = (mod as any).renderToReadableStream ?? (mod as any).default?.renderToReadableStream;
+  }
+
+  return _renderToReadableStream!;
+}
 
 export default async function handleRequest(
   request: Request,
@@ -14,6 +47,8 @@ export default async function handleRequest(
   _loadContext: AppLoadContext,
 ) {
   // await initializeModelList({});
+
+  const renderToReadableStream = await getRenderToReadableStream();
 
   const readable = await renderToReadableStream(<RemixServer context={remixContext} url={request.url} />, {
     signal: request.signal,
