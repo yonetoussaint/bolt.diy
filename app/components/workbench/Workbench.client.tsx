@@ -406,18 +406,19 @@ export const Workbench = memo(
                   <Slider selected={selectedView} options={sliderOptions} setSelected={setSelectedView} />
                   <div className="ml-auto" />
                   {selectedView === 'code' && (
-                    <div className="flex overflow-y-auto">
+                    <div className="flex overflow-x-auto overflow-y-hidden shrink-0 max-w-full">
                       {/* Export Chat Button */}
                       <ExportChatButton exportChat={exportChat} />
 
                       {/* Sync Button */}
-                      <div className="flex border border-bolt-elements-borderColor rounded-md overflow-hidden ml-1">
+                      <div className="flex border border-bolt-elements-borderColor rounded-md overflow-hidden ml-1 shrink-0">
                         <DropdownMenu.Root>
                           <DropdownMenu.Trigger
                             disabled={isSyncing || streaming}
                             className="rounded-md items-center justify-center [&:is(:disabled,.disabled)]:cursor-not-allowed [&:is(:disabled,.disabled)]:opacity-60 px-3 py-1.5 text-xs bg-accent-500 text-white hover:text-bolt-elements-item-contentAccent [&:not(:disabled,.disabled)]:hover:bg-bolt-elements-button-primary-backgroundHover outline-accent-500 flex gap-1.7"
                           >
-                            {isSyncing ? 'Syncing...' : 'Sync'}
+                            <span className={isSmallViewport ? 'hidden' : ''}>{isSyncing ? 'Syncing...' : 'Sync'}</span>
+                            <div className={isSmallViewport ? 'i-ph:cloud-arrow-down' : ''} />
                             <span className={classNames('i-ph:caret-down transition-transform')} />
                           </DropdownMenu.Trigger>
                           <DropdownMenu.Content
@@ -453,7 +454,7 @@ export const Workbench = memo(
                       </div>
 
                       {/* Toggle Terminal Button */}
-                      <div className="flex border border-bolt-elements-borderColor rounded-md overflow-hidden ml-1">
+                      <div className="flex border border-bolt-elements-borderColor rounded-md overflow-hidden ml-1 shrink-0">
                         <button
                           onClick={() => {
                             workbenchStore.toggleTerminal(!workbenchStore.showTerminal.get());
@@ -461,7 +462,7 @@ export const Workbench = memo(
                           className="rounded-md items-center justify-center [&:is(:disabled,.disabled)]:cursor-not-allowed [&:is(:disabled,.disabled)]:opacity-60 px-3 py-1.5 text-xs bg-accent-500 text-white hover:text-bolt-elements-item-contentAccent [&:not(:disabled,.disabled)]:hover:bg-bolt-elements-button-primary-backgroundHover outline-accent-500 flex gap-1.7"
                         >
                           <div className="i-ph:terminal" />
-                          Toggle Terminal
+                          {!isSmallViewport && 'Toggle Terminal'}
                         </button>
                       </div>
                     </div>
