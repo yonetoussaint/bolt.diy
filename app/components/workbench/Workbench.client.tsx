@@ -395,7 +395,7 @@ export const Workbench = memo(
               <div className="h-full flex flex-col bg-bolt-elements-background-depth-2 border border-bolt-elements-borderColor shadow-sm rounded-lg overflow-hidden">
                 <div className="flex items-center px-3 py-2 border-b border-bolt-elements-borderColor gap-1.5">
                   <button
-                    className={`${showChat ? 'i-ph:sidebar-simple-fill' : 'i-ph:sidebar-simple'} text-lg text-bolt-elements-textSecondary mr-1`}
+                    className={`${showChat ? 'i-ph:sidebar-simple-fill' : 'i-ph:sidebar-simple'} text-lg text-bolt-elements-textSecondary mr-1 shrink-0`}
                     disabled={!canHideChat || isSmallViewport}
                     onClick={() => {
                       if (canHideChat) {
@@ -403,10 +403,11 @@ export const Workbench = memo(
                       }
                     }}
                   />
-                  <Slider selected={selectedView} options={sliderOptions} setSelected={setSelectedView} />
-                  <div className="ml-auto" />
+                  <div className="shrink-0">
+                    <Slider selected={selectedView} options={sliderOptions} setSelected={setSelectedView} />
+                  </div>
                   {selectedView === 'code' && (
-                    <div className="flex overflow-x-auto overflow-y-hidden shrink-0 max-w-full">
+                    <div className="flex overflow-x-auto overflow-y-hidden min-w-0 flex-1 justify-end">
                       {/* Export Chat Button */}
                       <ExportChatButton exportChat={exportChat} />
 
@@ -469,11 +470,14 @@ export const Workbench = memo(
                   )}
 
                   {selectedView === 'diff' && (
-                    <FileModifiedDropdown fileHistory={fileHistory} onSelectFile={handleSelectFile} />
+                    <div className="flex overflow-x-auto overflow-y-hidden min-w-0 flex-1 justify-end">
+                      <FileModifiedDropdown fileHistory={fileHistory} onSelectFile={handleSelectFile} />
+                    </div>
                   )}
+                  {selectedView !== 'code' && selectedView !== 'diff' && <div className="flex-1" />}
                   <IconButton
                     icon="i-ph:x-circle"
-                    className="-mr-1"
+                    className="-mr-1 shrink-0"
                     size="xl"
                     onClick={() => {
                       workbenchStore.showWorkbench.set(false);
