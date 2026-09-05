@@ -26,7 +26,16 @@ let _renderToReadableStream: RenderToReadableStream | null = null;
 
 async function getRenderToReadableStream(): Promise<RenderToReadableStream> {
   if (_renderToReadableStream === null) {
-    const mod = await import('react-dom/server');
+    /*
+     * ``react-dom/server`` resolves to ``server.node.js`` on a plain Node
+     * runtime (Netlify Functions, Electron, etc.), which only exports
+     * ``renderToPipeableStream`` — not ``renderToReadableStream``. Cloudflare
+     * Workers resolve the same specifier to ``server.browser.js`` instead,
+     * which does have it. Import the browser build explicitly so this works
+     * identically on every target; it only needs the Web Streams API, which
+     * Node 18+ provides natively.
+     */
+    const mod = await import('react-dom/server.browser');
 
     /*
      * ``import()`` on a CJS module returns a namespace where the whole
