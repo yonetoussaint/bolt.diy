@@ -7,6 +7,7 @@ import React, { type RefCallback, useEffect, useState } from 'react';
 import { ClientOnly } from 'remix-utils/client-only';
 import { Menu } from '~/components/sidebar/Menu.client';
 import { Workbench } from '~/components/workbench/Workbench.client';
+import { MobileNav } from '~/components/workbench/MobileNav.client';
 import { classNames } from '~/utils/classNames';
 import { PROVIDER_LIST } from '~/utils/constants';
 import { Messages } from './Messages.client';
@@ -389,7 +390,8 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
               </StickToBottom.Content>
               <div
                 className={classNames('my-auto flex flex-col gap-2 w-full max-w-chat mx-auto z-prompt mb-6', {
-                  'sticky bottom-2': chatStarted,
+                  // Clears the fixed mobile bottom tab bar; lg+ has no bottom nav so it reverts to a small offset.
+                  'sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] lg:bottom-2': chatStarted,
                 })}
               >
                 <div className="flex flex-col gap-2">
@@ -497,6 +499,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
               <Workbench chatStarted={chatStarted} isStreaming={isStreaming} setSelectedElement={setSelectedElement} />
             )}
           </ClientOnly>
+          {chatStarted && <ClientOnly>{() => <MobileNav />}</ClientOnly>}
         </div>
       </div>
     );
