@@ -382,108 +382,139 @@ export const Workbench = memo(
         >
           <div
             className={classNames(
-              'fixed top-[calc(var(--header-height)+1.2rem)] bottom-6 w-[var(--workbench-inner-width)] z-0 transition-[left,width] duration-200 bolt-ease-cubic-bezier',
+              'fixed top-[calc(var(--header-height)+1.2rem)] w-[var(--workbench-inner-width)] z-0 transition-[left,width] duration-200 bolt-ease-cubic-bezier',
               {
                 'w-full': isSmallViewport,
                 'left-0': showWorkbench && isSmallViewport,
                 'left-[var(--workbench-left)]': showWorkbench,
                 'left-[100%]': !showWorkbench,
+
+                // Leaves room for the fixed Replit-style bottom tab bar on mobile; desktop has no bottom nav.
+                'bottom-[calc(4.5rem+env(safe-area-inset-bottom))]': isSmallViewport,
+                'bottom-6': !isSmallViewport,
               },
             )}
           >
-            <div className="absolute inset-0 px-2 lg:px-4">
-              <div className="h-full flex flex-col bg-bolt-elements-background-depth-2 border border-bolt-elements-borderColor shadow-sm rounded-lg overflow-hidden">
-                <div className="flex items-center px-3 py-2 border-b border-bolt-elements-borderColor gap-1.5">
-                  <button
-                    className={`${showChat ? 'i-ph:sidebar-simple-fill' : 'i-ph:sidebar-simple'} text-lg text-bolt-elements-textSecondary mr-1 shrink-0`}
-                    disabled={!canHideChat || isSmallViewport}
-                    onClick={() => {
-                      if (canHideChat) {
-                        chatStore.setKey('showChat', !showChat);
-                      }
-                    }}
-                  />
-                  <div className="shrink-0">
-                    <Slider selected={selectedView} options={sliderOptions} setSelected={setSelectedView} />
-                  </div>
-                  {selectedView === 'code' && (
-                    <div className="flex overflow-x-auto overflow-y-hidden min-w-0 flex-1 justify-end">
-                      {/* Export Chat Button */}
-                      <ExportChatButton exportChat={exportChat} />
+            <div className={classNames('absolute inset-0', { 'px-0': isSmallViewport, 'lg:px-4': !isSmallViewport })}>
+              <div
+                className={classNames(
+                  'h-full flex flex-col bg-bolt-elements-background-depth-2 overflow-hidden',
+                  isSmallViewport ? '' : 'border border-bolt-elements-borderColor shadow-sm rounded-lg',
+                )}
+              >
+                {(!isSmallViewport || selectedView !== 'preview') && (
+                  <div className="flex items-center px-3 py-2 border-b border-bolt-elements-borderColor gap-1.5">
+                    {!isSmallViewport && (
+                      <>
+                        <button
+                          className={`${showChat ? 'i-ph:sidebar-simple-fill' : 'i-ph:sidebar-simple'} text-lg text-bolt-elements-textSecondary mr-1 shrink-0`}
+                          disabled={!canHideChat}
+                          onClick={() => {
+                            if (canHideChat) {
+                              chatStore.setKey('showChat', !showChat);
+                            }
+                          }}
+                        />
+                        <div className="shrink-0">
+                          <Slider selected={selectedView} options={sliderOptions} setSelected={setSelectedView} />
+                        </div>
+                      </>
+                    )}
+                    {isSmallViewport && (selectedView === 'code' || selectedView === 'diff') && (
+                      <button
+                        className="flex items-center gap-1.5 shrink-0 text-sm font-medium text-bolt-elements-textPrimary"
+                        onClick={() => setSelectedView(selectedView === 'code' ? 'diff' : 'code')}
+                      >
+                        {selectedView === 'diff' && <div className="i-ph:arrow-left text-lg" />}
+                        <span>{selectedView === 'diff' ? 'Changes' : 'Code'}</span>
+                        {selectedView === 'code' && Object.keys(fileHistory).length > 0 && (
+                          <span className="i-ph:git-diff text-base text-bolt-elements-textTertiary" />
+                        )}
+                      </button>
+                    )}
+                    {selectedView === 'code' && (
+                      <div className="flex overflow-x-auto overflow-y-hidden min-w-0 flex-1 justify-end">
+                        {/* Export Chat Button */}
+                        <ExportChatButton exportChat={exportChat} />
 
-                      {/* Sync Button */}
-                      <div className="flex border border-bolt-elements-borderColor rounded-md overflow-hidden ml-1 shrink-0">
-                        <DropdownMenu.Root>
-                          <DropdownMenu.Trigger
-                            disabled={isSyncing || streaming}
+                        {/* Sync Button */}
+                        <div className="flex border border-bolt-elements-borderColor rounded-md overflow-hidden ml-1 shrink-0">
+                          <DropdownMenu.Root>
+                            <DropdownMenu.Trigger
+                              disabled={isSyncing || streaming}
+                              className="rounded-md items-center justify-center [&:is(:disabled,.disabled)]:cursor-not-allowed [&:is(:disabled,.disabled)]:opacity-60 px-3 py-1.5 text-xs bg-accent-500 text-white hover:text-bolt-elements-item-contentAccent [&:not(:disabled,.disabled)]:hover:bg-bolt-elements-button-primary-backgroundHover outline-accent-500 flex gap-1.7"
+                            >
+                              <span className={isSmallViewport ? 'hidden' : ''}>
+                                {isSyncing ? 'Syncing...' : 'Sync'}
+                              </span>
+                              <div className={isSmallViewport ? 'i-ph:cloud-arrow-down' : ''} />
+                              <span className={classNames('i-ph:caret-down transition-transform')} />
+                            </DropdownMenu.Trigger>
+                            <DropdownMenu.Content
+                              className={classNames(
+                                'min-w-[240px] z-[250]',
+                                'bg-white dark:bg-[#141414]',
+                                'rounded-lg shadow-lg',
+                                'border border-gray-200/50 dark:border-gray-800/50',
+                                'animate-in fade-in-0 zoom-in-95',
+                                'py-1',
+                              )}
+                              sideOffset={5}
+                              align="end"
+                            >
+                              <DropdownMenu.Item
+                                className={classNames(
+                                  'cursor-pointer flex items-center w-full px-4 py-2 text-sm text-bolt-elements-textPrimary hover:bg-bolt-elements-item-backgroundActive gap-2 rounded-md group relative',
+                                )}
+                                onClick={handleSyncFiles}
+                                disabled={isSyncing}
+                              >
+                                <div className="flex items-center gap-2">
+                                  {isSyncing ? (
+                                    <div className="i-ph:spinner" />
+                                  ) : (
+                                    <div className="i-ph:cloud-arrow-down" />
+                                  )}
+                                  <span>{isSyncing ? 'Syncing...' : 'Sync Files'}</span>
+                                </div>
+                              </DropdownMenu.Item>
+                            </DropdownMenu.Content>
+                          </DropdownMenu.Root>
+                        </div>
+
+                        {/* Toggle Terminal Button */}
+                        <div className="flex border border-bolt-elements-borderColor rounded-md overflow-hidden ml-1 shrink-0">
+                          <button
+                            onClick={() => {
+                              workbenchStore.toggleTerminal(!workbenchStore.showTerminal.get());
+                            }}
                             className="rounded-md items-center justify-center [&:is(:disabled,.disabled)]:cursor-not-allowed [&:is(:disabled,.disabled)]:opacity-60 px-3 py-1.5 text-xs bg-accent-500 text-white hover:text-bolt-elements-item-contentAccent [&:not(:disabled,.disabled)]:hover:bg-bolt-elements-button-primary-backgroundHover outline-accent-500 flex gap-1.7"
                           >
-                            <span className={isSmallViewport ? 'hidden' : ''}>{isSyncing ? 'Syncing...' : 'Sync'}</span>
-                            <div className={isSmallViewport ? 'i-ph:cloud-arrow-down' : ''} />
-                            <span className={classNames('i-ph:caret-down transition-transform')} />
-                          </DropdownMenu.Trigger>
-                          <DropdownMenu.Content
-                            className={classNames(
-                              'min-w-[240px] z-[250]',
-                              'bg-white dark:bg-[#141414]',
-                              'rounded-lg shadow-lg',
-                              'border border-gray-200/50 dark:border-gray-800/50',
-                              'animate-in fade-in-0 zoom-in-95',
-                              'py-1',
-                            )}
-                            sideOffset={5}
-                            align="end"
-                          >
-                            <DropdownMenu.Item
-                              className={classNames(
-                                'cursor-pointer flex items-center w-full px-4 py-2 text-sm text-bolt-elements-textPrimary hover:bg-bolt-elements-item-backgroundActive gap-2 rounded-md group relative',
-                              )}
-                              onClick={handleSyncFiles}
-                              disabled={isSyncing}
-                            >
-                              <div className="flex items-center gap-2">
-                                {isSyncing ? (
-                                  <div className="i-ph:spinner" />
-                                ) : (
-                                  <div className="i-ph:cloud-arrow-down" />
-                                )}
-                                <span>{isSyncing ? 'Syncing...' : 'Sync Files'}</span>
-                              </div>
-                            </DropdownMenu.Item>
-                          </DropdownMenu.Content>
-                        </DropdownMenu.Root>
+                            <div className="i-ph:terminal" />
+                            {!isSmallViewport && 'Toggle Terminal'}
+                          </button>
+                        </div>
                       </div>
+                    )}
 
-                      {/* Toggle Terminal Button */}
-                      <div className="flex border border-bolt-elements-borderColor rounded-md overflow-hidden ml-1 shrink-0">
-                        <button
-                          onClick={() => {
-                            workbenchStore.toggleTerminal(!workbenchStore.showTerminal.get());
-                          }}
-                          className="rounded-md items-center justify-center [&:is(:disabled,.disabled)]:cursor-not-allowed [&:is(:disabled,.disabled)]:opacity-60 px-3 py-1.5 text-xs bg-accent-500 text-white hover:text-bolt-elements-item-contentAccent [&:not(:disabled,.disabled)]:hover:bg-bolt-elements-button-primary-backgroundHover outline-accent-500 flex gap-1.7"
-                        >
-                          <div className="i-ph:terminal" />
-                          {!isSmallViewport && 'Toggle Terminal'}
-                        </button>
+                    {selectedView === 'diff' && (
+                      <div className="flex overflow-x-auto overflow-y-hidden min-w-0 flex-1 justify-end">
+                        <FileModifiedDropdown fileHistory={fileHistory} onSelectFile={handleSelectFile} />
                       </div>
-                    </div>
-                  )}
-
-                  {selectedView === 'diff' && (
-                    <div className="flex overflow-x-auto overflow-y-hidden min-w-0 flex-1 justify-end">
-                      <FileModifiedDropdown fileHistory={fileHistory} onSelectFile={handleSelectFile} />
-                    </div>
-                  )}
-                  {selectedView !== 'code' && selectedView !== 'diff' && <div className="flex-1" />}
-                  <IconButton
-                    icon="i-ph:x-circle"
-                    className="-mr-1 shrink-0"
-                    size="xl"
-                    onClick={() => {
-                      workbenchStore.showWorkbench.set(false);
-                    }}
-                  />
-                </div>
+                    )}
+                    {selectedView !== 'code' && selectedView !== 'diff' && <div className="flex-1" />}
+                    {!isSmallViewport && (
+                      <IconButton
+                        icon="i-ph:x-circle"
+                        className="-mr-1 shrink-0"
+                        size="xl"
+                        onClick={() => {
+                          workbenchStore.showWorkbench.set(false);
+                        }}
+                      />
+                    )}
+                  </div>
+                )}
                 <div className="relative flex-1 overflow-hidden">
                   <View initial={{ x: '0%' }} animate={{ x: selectedView === 'code' ? '0%' : '-100%' }}>
                     <EditorPanel
