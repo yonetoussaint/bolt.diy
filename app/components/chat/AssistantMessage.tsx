@@ -103,7 +103,7 @@ export const AssistantMessage = memo(
     ) as ToolCallAnnotation[];
 
     return (
-      <div className="overflow-hidden w-full">
+      <div className="overflow-hidden w-full bg-bolt-elements-messages-background rounded-2xl rounded-tl-md p-4 md:p-5">
         <>
           <div className=" flex gap-2 items-center text-sm text-bolt-elements-textSecondary mb-2">
             {(codeContext || chatSummary) && (
@@ -180,11 +180,13 @@ export const AssistantMessage = memo(
           {content}
         </Markdown>
         {toolInvocations && toolInvocations.length > 0 && (
-          <ToolInvocations
-            toolInvocations={toolInvocations}
-            toolCallAnnotations={toolCallAnnotations}
-            addToolResult={addToolResult}
-          />
+          <div className="mt-3 bg-bolt-elements-background-depth-1 rounded-xl p-3">
+            <ToolInvocations
+              toolInvocations={toolInvocations}
+              toolCallAnnotations={toolCallAnnotations}
+              addToolResult={addToolResult}
+            />
+          </div>
         )}
       </div>
     );
